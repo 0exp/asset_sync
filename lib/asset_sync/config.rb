@@ -91,6 +91,7 @@ module AssetSync
     validates :concurrent_uploads,    :inclusion => { :in => [true, false] }
 
     def initialize
+      puts "INVOKING: #{self.class.name}::initialize"
       self.fog_region = nil
       self.fog_public = true
       self.existing_remote_files = 'keep'
@@ -117,6 +118,7 @@ module AssetSync
     end
 
     def manifest_path
+      puts "INVOKING: #{self.class.name}::manifest_path"
       if defined?(ActionView) && ActionView::Base.respond_to?(:assets_manifest)
         ::Rails.application.config.assets.manifest
       else
@@ -127,6 +129,7 @@ module AssetSync
     end
 
     def gzip_compression= bool
+      puts "INVOKING: #{self.class.name}::gzip_compression= bool"
       if bool
         self.compression = 'gz'
       else
@@ -135,83 +138,103 @@ module AssetSync
     end
 
     def existing_remote_files?
+      puts "INVOKING: #{self.class.name}::existing_remote_files?"
       ['keep', 'ignore'].include?(self.existing_remote_files)
     end
 
     def aws?
+      puts "INVOKING: #{self.class.name}::aws?"
       fog_provider =~ /aws/i
     end
 
     def aws_rrs?
+      puts "INVOKING: #{self.class.name}::aws_rrs?"
       aws_reduced_redundancy == true
     end
 
     def aws_iam?
+      puts "INVOKING: #{self.class.name}::aws_iam?"
       aws_iam_roles == true
     end
 
     def fail_silently?
+      puts "INVOKING: #{self.class.name}::fail_silently?"
       fail_silently || !enabled?
     end
 
     def log_silently?
+      puts "INVOKING: #{self.class.name}::log_silently?"
       !!self.log_silently
     end
 
     def enabled?
+      puts "INVOKING: #{self.class.name}::enabled?"
       enabled == true
     end
 
     def rackspace?
+      puts "INVOKING: #{self.class.name}::rackspace?"
       fog_provider =~ /rackspace/i
     end
 
     def google?
+      puts "INVOKING: #{self.class.name}::google?"
       fog_provider =~ /google/i
     end
 
     def google_interop?
+      puts "INVOKING: #{self.class.name}::google_interop?"
       google? && google_auth.nil? && google_json_key_location.nil? && google_json_key_string.nil?
     end
 
     def google_service_account?
+      puts "INVOKING: #{self.class.name}::google_service_account?"
       google? && (google_json_key_location || google_json_key_string)
     end
 
     def azure_rm?
+      puts "INVOKING: #{self.class.name}::azure_rm?"
       fog_provider =~ /azurerm/i
     end
 
     def backblaze?
+      puts "INVOKING: #{self.class.name}::backblaze?"
       fog_provider =~ /backblaze/i
     end
 
     def cache_asset_regexp=(cache_asset_regexp)
+      puts "INVOKING: #{self.class.name}::cache_asset_regexp=(cache_asset_regexp)"
       self.cache_asset_regexps = [cache_asset_regexp]
     end
 
     def yml_exists?
+      puts "INVOKING: #{self.class.name}::yml_exists?"
       defined?(::Rails.root) ? File.exist?(self.yml_path) : false
     end
 
     def yml
+      puts "INVOKING: #{self.class.name}::yml"
       @yml ||= ::AssetSync.load_yaml(::ERB.new(IO.read(yml_path)).result)[::Rails.env] || {}
     end
 
     def yml_path
+      puts "INVOKING: #{self.class.name}::yml_path"
       ::Rails.root.join("config", "asset_sync.yml").to_s
     end
 
     def assets_prefix
+      puts "INVOKING: #{self.class.name}::assets_prefix"
       # Fix for Issue #38 when Rails.config.assets.prefix starts with a slash
       self.prefix || ::Rails.application.config.assets.prefix.sub(/^\//, '')
     end
 
     def public_path
+      puts "INVOKING: #{self.class.name}::public_path"
       @public_path || ::Rails.public_path
     end
 
     def public_path=(path)
+      puts "INVOKING: #{self.class.name}::public_path=(path)"
       # Generate absolute path even when relative path passed in
       # Required for generating relative sprockets manifest path
       pathname = Pathname(path)
@@ -225,6 +248,7 @@ module AssetSync
     end
 
     def load_yml!
+      puts "INVOKING: #{self.class.name}::load_yml!"
       self.enabled                = yml["enabled"] if yml.has_key?('enabled')
       self.fog_provider           = yml["fog_provider"]
       self.fog_host               = yml["fog_host"]
@@ -293,6 +317,7 @@ module AssetSync
 
 
     def fog_options
+      puts "INVOKING: #{self.class.name}::fog_options"
       options = { :provider => fog_provider }
       if aws?
         if aws_iam?
@@ -357,6 +382,7 @@ module AssetSync
 
     # @api
     def add_local_file_paths(&block)
+      puts "INVOKING: #{self.class.name}::add_local_file_paths(&block)"
       @additional_local_file_paths_procs =
         additional_local_file_paths_procs + [block]
     end
@@ -365,6 +391,7 @@ module AssetSync
     #   This is to be called in Storage
     #   Not to be called by user
     def additional_local_file_paths
+      puts "INVOKING: #{self.class.name}::additional_local_file_paths"
       return [] if additional_local_file_paths_procs.empty?
 
       # Using `Array()` to ensure it works when single value is returned
@@ -375,10 +402,12 @@ module AssetSync
 
     #@api
     def file_ext_to_mime_type_overrides
+      puts "INVOKING: #{self.class.name}::file_ext_to_mime_type_overrides"
       @file_ext_to_mime_type_overrides ||= FileExtToMimeTypeOverrides.new
     end
 
     def fog_public=(new_val)
+      puts "INVOKING: #{self.class.name}::fog_public=(new_val)"
       @fog_public = FogPublicValue.new(new_val)
     end
 
@@ -389,6 +418,7 @@ module AssetSync
     attr_reader :additional_local_file_paths_procs
 
     def default_manifest_directory
+      puts "INVOKING: #{self.class.name}::default_manifest_directory"
       File.join(::Rails.public_path, assets_prefix)
     end
 
@@ -396,6 +426,7 @@ module AssetSync
     # @api private
     class FileExtToMimeTypeOverrides
       def initialize
+        puts "INVOKING: #{self.class.name}::initialize"
         # The default is to prevent new mime type `application/ecmascript` to be returned
         # which disables compression on some CDNs
         @overrides = {
@@ -405,6 +436,7 @@ module AssetSync
 
       # @api
       def add(ext, mime_type)
+        puts "INVOKING: #{self.class.name}::add(ext, mime_type)"
         # Symbol / Mime type object might be passed in
         # But we want strings only
         @overrides.store(
@@ -414,17 +446,20 @@ module AssetSync
 
       # @api
       def clear
+        puts "INVOKING: #{self.class.name}::clear"
         @overrides = {}
       end
 
 
       # @api private
       def key?(key)
+        puts "INVOKING: #{self.class.name}::key?(key)"
         @overrides.key?(key)
       end
 
       # @api private
       def fetch(key)
+        puts "INVOKING: #{self.class.name}::fetch(key)"
         @overrides.fetch(key)
       end
     end
@@ -432,14 +467,17 @@ module AssetSync
     # @api private
     class FogPublicValue
       def initialize(val)
+        puts "INVOKING: #{self.class.name}::initialize(val)"
         @value = val
       end
 
       def use_explicit_value?
+        puts "INVOKING: #{self.class.name}::use_explicit_value?"
         @value.to_s != "default"
       end
 
       def to_bool
+        puts "INVOKING: #{self.class.name}::to_bool"
         !!@value
       end
     end
